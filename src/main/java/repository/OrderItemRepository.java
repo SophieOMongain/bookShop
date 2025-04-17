@@ -1,5 +1,8 @@
 package repository;
 
-public class OrderItemRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+import entity.OrderItem;
+
+public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
 
 }
