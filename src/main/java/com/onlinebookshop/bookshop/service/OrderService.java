@@ -1,14 +1,11 @@
 package com.onlinebookshop.bookshop.service;
 
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import com.onlinebookshop.bookshop.entity.Order;
-import com.onlinebookshop.bookshop.repository.OrderRepository;
-
 import java.util.List;
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import com.onlinebookshop.bookshop.entity.Order;
+import com.onlinebookshop.bookshop.repository.OrderRepository;
 
 @Service
 public class OrderService {
@@ -24,6 +21,10 @@ public class OrderService {
         return orderRepository.findAll();
     }
 
+    public List<Order> getOrdersByUserId(Long userId) {
+        return orderRepository.findByUserId(userId);
+    }
+
     public Order getOrderById(Long id) {
         return orderRepository.findById(id).orElse(null);
     }
@@ -33,15 +34,21 @@ public class OrderService {
     }
 
     public Order updateOrder(Long id, Order updatedOrder) {
-        return orderRepository.findById(id).map(order -> {
-            order.setTotal(updatedOrder.getTotal());
-            order.setOrderItems(updatedOrder.getOrderItems());
-            return orderRepository.save(order);
-        }).orElse(null);
+        return orderRepository.findById(id)
+            .map(order -> {
+                order.setTotal(updatedOrder.getTotal());
+                order.setOrderItems(updatedOrder.getOrderItems());
+                return orderRepository.save(order);
+            })
+            .orElse(null);
     }
 
-    public void deleteOrder(Long id) {
-        orderRepository.deleteById(id);
+    public boolean deleteOrder(Long id) {
+        if (orderRepository.existsById(id)) {
+            orderRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
 }
 

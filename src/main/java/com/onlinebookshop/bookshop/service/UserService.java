@@ -1,13 +1,11 @@
 package com.onlinebookshop.bookshop.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import com.onlinebookshop.bookshop.entity.User;
-import com.onlinebookshop.bookshop.repository.UserRepository;
-
 import java.util.List;
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import com.onlinebookshop.bookshop.entity.User;
+import com.onlinebookshop.bookshop.repository.UserRepository;
 
 @Service
 public class UserService {
@@ -24,8 +22,11 @@ public class UserService {
     }
 
     public User getUserById(Long id) {
-        Optional<User> user = userRepository.findById(id);
-        return user.orElse(null);
+        return userRepository.findById(id).orElse(null);
+    }
+
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email).orElse(null);
     }
 
     public User createUser(User user) {
@@ -33,22 +34,24 @@ public class UserService {
     }
 
     public User updateUser(Long id, User updatedUser) {
-        Optional<User> userData = userRepository.findById(id);
-        if (userData.isPresent()) {
-            User user = userData.get();
-            user.setUsername(updatedUser.getUsername());
-            user.setEmail(updatedUser.getEmail());
-            user.setPassword(updatedUser.getPassword());
-            user.setShippingAddress(updatedUser.getShippingAddress());
-            user.setPaymentMethod(updatedUser.getPaymentMethod());
-            user.setRole(updatedUser.getRole());
-            return userRepository.save(user);
-        } else {
-            return null;
-        }
+        return userRepository.findById(id)
+            .map(user -> {
+                user.setUsername(updatedUser.getUsername());
+                user.setEmail(updatedUser.getEmail());
+                user.setPassword(updatedUser.getPassword());
+                user.setShippingAddress(updatedUser.getShippingAddress());
+                user.setPaymentMethod(updatedUser.getPaymentMethod());
+                user.setRole(updatedUser.getRole());
+                return userRepository.save(user);
+            })
+            .orElse(null);
     }
 
-    public void deleteUser(Long id) {
-        userRepository.deleteById(id);
+    public boolean deleteUser(Long id) {
+        if (userRepository.existsById(id)) {
+            userRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
 }

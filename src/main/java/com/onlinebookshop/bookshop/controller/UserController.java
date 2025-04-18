@@ -1,19 +1,15 @@
 package com.onlinebookshop.bookshop.controller;
 
-
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import com.onlinebookshop.bookshop.entity.User;
 import com.onlinebookshop.bookshop.service.UserService;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
-
     private final UserService userService;
 
     @Autowired
@@ -22,18 +18,16 @@ public class UserController {
     }
 
     @GetMapping
-    public List<User> getAllUsers(){
-        return userService.getAllUsers();
+    public ResponseEntity<List<User>> getAllUsers(){
+        return ResponseEntity.ok(userService.getAllUsers());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id){
         User user = userService.getUserById(id);
-        if(user != null){
-            return ResponseEntity.ok(user);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+        return (user != null)
+            ? ResponseEntity.ok(user)
+            : ResponseEntity.notFound().build();
     }
 
     @PostMapping
@@ -43,18 +37,18 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user){
+    public ResponseEntity<User> updateUser( @PathVariable Long id, @RequestBody User user) {
         User updatedUser = userService.updateUser(id, user);
-        if(updatedUser != null){
-            return ResponseEntity.ok(updatedUser);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+        return (updatedUser != null)
+            ? ResponseEntity.ok(updatedUser)
+            : ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id){
-        userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
+        boolean deleted = userService.deleteUser(id);
+        return deleted
+            ? ResponseEntity.noContent().build()
+            : ResponseEntity.notFound().build();
     }
 }

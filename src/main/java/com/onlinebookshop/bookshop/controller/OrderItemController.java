@@ -1,18 +1,15 @@
 package com.onlinebookshop.bookshop.controller;
 
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import com.onlinebookshop.bookshop.entity.OrderItem;
 import com.onlinebookshop.bookshop.service.OrderItemService;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("/api/orderItems")
+@RequestMapping("/api/order-items")
 public class OrderItemController {
-
     private final OrderItemService orderItemService;
 
     @Autowired
@@ -21,39 +18,47 @@ public class OrderItemController {
     }
 
     @GetMapping
-    public List<OrderItem> getAllOrderItems() {
-        return orderItemService.getAllOrderItems();
+    public ResponseEntity<List<OrderItem>> getAllOrderItems() {
+        return ResponseEntity.ok(orderItemService.getAllOrderItems());
+    }
+
+    @GetMapping("/order/{orderId}")
+    public ResponseEntity<List<OrderItem>> getByOrderId(@PathVariable Long orderId) {
+        List<OrderItem> items = orderItemService.getOrderItemsByOrderId(orderId);
+        return ResponseEntity.ok(items);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OrderItem> getOrderItemById(@PathVariable Long id) {
-        OrderItem orderItem = orderItemService.getOrderItemById(id);
-        if (orderItem != null) {
-            return ResponseEntity.ok(orderItem);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<OrderItem> getById(@PathVariable Long id) {
+        OrderItem item = orderItemService.getOrderItemById(id);
+        return (item != null)
+            ? ResponseEntity.ok(item)
+            : ResponseEntity.notFound().build();
     }
 
     @PostMapping
     public ResponseEntity<OrderItem> createOrderItem(@RequestBody OrderItem orderItem) {
-        OrderItem newItem = orderItemService.createOrderItem(orderItem);
-        return ResponseEntity.ok(newItem);
+        OrderItem created = orderItemService.createOrderItem(orderItem);
+        return ResponseEntity.ok(created);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<OrderItem> updateOrderItem(@PathVariable Long id, @RequestBody OrderItem updatedOrderItem) {
-        OrderItem orderItem = orderItemService.updateOrderItem(id, updatedOrderItem);
-        if (orderItem != null) {
-            return ResponseEntity.ok(orderItem);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<OrderItem> updateOrderItem(
+        @PathVariable Long id,
+        @RequestBody OrderItem updatedOrderItem
+    ) {
+        OrderItem item = orderItemService.updateOrderItem(id, updatedOrderItem);
+        return (item != null)
+            ? ResponseEntity.ok(item)
+            : ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOrderItem(@PathVariable Long id) {
-        orderItemService.deleteOrderItem(id);
-        return ResponseEntity.noContent().build();
+        boolean deleted = orderItemService.deleteOrderItem(id);
+        return deleted
+            ? ResponseEntity.noContent().build()
+            : ResponseEntity.notFound().build();
     }
 }
+

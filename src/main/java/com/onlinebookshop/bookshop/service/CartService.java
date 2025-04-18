@@ -1,9 +1,9 @@
 package com.onlinebookshop.bookshop.service;
 
-
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import com.onlinebookshop.bookshop.entity.Book;
 import com.onlinebookshop.bookshop.entity.Cart;
 import com.onlinebookshop.bookshop.entity.Item;
@@ -12,10 +12,6 @@ import com.onlinebookshop.bookshop.repository.BookRepository;
 import com.onlinebookshop.bookshop.repository.CartRepository;
 import com.onlinebookshop.bookshop.repository.ItemRepository;
 import com.onlinebookshop.bookshop.repository.UserRepository;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class CartService {
@@ -26,8 +22,7 @@ public class CartService {
     private final BookRepository bookRepository;
 
     @Autowired
-    public CartService(CartRepository cartRepository, ItemRepository itemRepository,
-                       UserRepository userRepository, BookRepository bookRepository) {
+    public CartService(CartRepository cartRepository, ItemRepository itemRepository, UserRepository userRepository, BookRepository bookRepository) {
         this.cartRepository = cartRepository;
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
@@ -35,40 +30,29 @@ public class CartService {
     }
 
     public Cart getCartByUserId(Long userId) {
-    	
-        Optional<Cart> optionalCart = cartRepository.findByUserId(userId);
-        if(optionalCart.isPresent()){
-            return optionalCart.get();
-        } else {
-            return createCartForUser(userId);
-        }
+        Cart cart = cartRepository.findByUserId(userId);
+        return (cart != null) ? cart : createCartForUser(userId);
     }
 
     public Cart createCartForUser(Long userId) {
-    	
-        Optional<User> userOptional = userRepository.findById(userId);
-        if(userOptional.isPresent()){
-        	
-            Cart cart = new Cart();
-            cart.setUser(userOptional.get());
-            cart.setItems(new ArrayList<>());
-            return cartRepository.save(cart);
-        }
-        return null;
+        return userRepository.findById(userId)
+            .map(user -> {
+                Cart cart = new Cart();
+                cart.setUser(user);
+                cart.setItems(new ArrayList<>());
+                return cartRepository.save(cart);
+            })
+            .orElse(null);
     }
 
     public Cart addItemToCart(Long userId, Long bookId, Integer quantity) {
         Cart cart = getCartByUserId(userId);
-        Optional<Book> bookOptional = bookRepository.findById(bookId);
         
-        if(bookOptional.isPresent()){
-        	
-            Book book = bookOptional.get();
+        if (cart == null) return null;
+        return bookRepository.findById(bookId).map(book -> {
             List<Item> items = cart.getItems();
-            for(Item item : items){
-            	
-                if(item.getBook().getId().equals(bookId)){
-                	
+            for (Item item : items) {
+                if (item.getBook().getId().equals(bookId)) {
                     item.setQuantity(item.getQuantity() + quantity);
                     itemRepository.save(item);
                     return cartRepository.save(cart);
@@ -82,56 +66,46 @@ public class CartService {
             items.add(newItem);
             cart.setItems(items);
             return cartRepository.save(cart);
-        }
-        return cart;
+        }).orElse(cart);
     }
 
     public Cart removeItemFromCart(Long userId, Long itemId) {
         Cart cart = getCartByUserId(userId);
-        Optional<Item> itemOptional = itemRepository.findById(itemId);
         
-        if(itemOptional.isPresent()){
-        	
-            Item item = itemOptional.get();
-            if(item.getCart().getId().equals(cart.getId())){
-            	
+        if (cart == null) return null;
+        return itemRepository.findById(itemId).map(item -> {
+            if (item.getCart().getId().equals(cart.getId())) {
                 cart.getItems().remove(item);
                 itemRepository.delete(item);
                 return cartRepository.save(cart);
             }
-        }
-        return cart;
+            return cart;
+        }).orElse(cart);
     }
 
     public Cart updateItemQuantity(Long userId, Long itemId, Integer newQuantity) {
         Cart cart = getCartByUserId(userId);
-        Optional<Item> itemOptional = itemRepository.findById(itemId);
         
-        if(itemOptional.isPresent()){
-        	
-            Item item = itemOptional.get();
-            
-            if(item.getCart().getId().equals(cart.getId())){
+        if (cart == null) return null;
+        return itemRepository.findById(itemId).map(item -> {
+            if (item.getCart().getId().equals(cart.getId())) {
                 item.setQuantity(newQuantity);
                 itemRepository.save(item);
                 return cartRepository.save(cart);
             }
-        }
-        return cart;
+            return cart;
+        }).orElse(cart);
     }
 
-    public void clearCart(Long userId) {
+    public Cart clearCart(Long userId) {
         Cart cart = getCartByUserId(userId);
-        List<Item> items = cart.getItems();
         
-        if(items != null){
-        	
-            for(Item item : items){
-                itemRepository.delete(item);
-            }
-            items.clear();
-            cart.setItems(items);
-            cartRepository.save(cart);
+        if (cart == null) return null;
+        List<Item> items = new ArrayList<>(cart.getItems());
+        for (Item item : items) {
+            itemRepository.delete(item);
         }
+        cart.getItems().clear();
+        return cartRepository.save(cart);
     }
 }

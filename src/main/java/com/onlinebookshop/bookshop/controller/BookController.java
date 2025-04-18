@@ -1,14 +1,11 @@
 package com.onlinebookshop.bookshop.controller;
 
+import com.onlinebookshop.bookshop.entity.Book;
+import com.onlinebookshop.bookshop.service.BookService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import com.onlinebookshop.bookshop.entity.Book;
-import com.onlinebookshop.bookshop.service.BookService;
-
 import java.util.List;
-
 
 @RestController
 @RequestMapping("/api/books")
@@ -56,4 +53,18 @@ public class BookController {
         bookService.deleteBook(id);
         return ResponseEntity.noContent().build();
     }
-} 
+
+    @GetMapping("/search")
+    public ResponseEntity<List<Book>> searchBooks(
+        @RequestParam(required = false) String title,
+        @RequestParam(required = false) String author,
+        @RequestParam(required = false) String publisher,
+        @RequestParam(required = false) String category,
+        @RequestParam(defaultValue = "title") String sortBy,
+        @RequestParam(defaultValue = "asc") String direction
+    ) {
+        List<Book> results = bookService.searchBooks(title, author, publisher, category, sortBy, direction);
+        return ResponseEntity.ok(results);
+    }
+}
+
