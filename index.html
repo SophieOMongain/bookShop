@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bookshop - Home</title>
+</head>
+<body>
+  <h2>Book Catalogue</h2>
+
+  <input type="text" id="searchTitle" placeholder="Search by title..." />
+
+  <select id="sortBy">
+    <option value="title">Title</option>
+    <option value="author">Author</option>
+    <option value="publisher">Publisher</option>
+    <option value="price">Price</option>
+  </select>
+
+  <select id="direction">
+    <option value="asc">Ascending</option>
+    <option value="desc">Descending</option>
+  </select>
+
+  <button onclick="loadBooks()">Search</button>
+
+  <div id="bookList"></div>
+  <p id="message"></p>
+
+  <script>
+    async function loadBooks() {
+      const title = document.getElementById("searchTitle").value;
+      const sortBy = document.getElementById("sortBy").value;
+      const direction = document.getElementById("direction").value;
+
+      const params = new URLSearchParams();
+      if (title) params.append("title", title);
+      params.append("sortBy", sortBy);
+      params.append("direction", direction);
+
+      const response = await fetch("http://localhost:8080/api/books/search?" + params.toString());
+      const books = await response.json();
+
+      const list = document.getElementById("bookList");
+      list.innerHTML = "";
+
+      if (books.length === 0) {
+        list.innerHTML = "<p>No books found.</p>";
+        return;
+      }
+
+      books.forEach(book => {
+        list.innerHTML += `
+          <div style="border:1px solid #ccc; padding:10px; margin:10px;">
+            <h3>${book.title}</h3>
+            <p><strong>Author:</strong> ${book.author}</p>
+            <p><strong>Publisher:</strong> ${book.publisher}</p>
+            <p><strong>Price:</strong> €${book.price.toFixed(2)}</p>
+            <button onclick="addToCart(${book.id})">Add to Cart</button>
+          </div>
+        `;
+      });
+    }
+
+    async function addToCart(bookId) {
+      const userId = 1; 
+      const response = await fetch(`http://localhost:8080/api/carts/${userId}/items?bookId=${bookId}&quantity=1`, {
+        method: "POST"
+      });
+
+      const msg = document.getElementById("message");
+      if (response.ok) {
+        msg.textContent = "Book added to cart!";
+      } else {
+        msg.textContent = "Failed to add to cart.";
+      }
+    }
+
+    window.onload = loadBooks;
+  </script>
+</body>
+</html>

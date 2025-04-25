@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Panel</title>
+</head>
+<body>
+  <h2>Admin Dashboard</h2>
+
+  <h3>Books (Update Stock)</h3>
+  <div id="booksContainer"></div>
+
+  <h3>Users</h3>
+  <div id="usersContainer"></div>
+
+  <h3>User Purchase History</h3>
+  <input type="number" id="orderUserId" placeholder="Enter User ID" />
+  <button onclick="loadOrders()">View Orders</button>
+  <div id="ordersContainer"></div>
+
+  <p id="message"></p>
+
+  <script>
+    async function loadBooks() {
+      const response = await fetch("http://localhost:8080/api/books");
+      const books = await response.json();
+
+      const container = document.getElementById("booksContainer");
+      container.innerHTML = "";
+      books.forEach(book => {
+        container.innerHTML += `
+          <div style="border:1px solid #ccc; margin:10px; padding:10px;">
+            <strong>${book.title}</strong> - Stock: 
+            <input type="number" value="${book.stock}" id="stock-${book.id}" />
+            <button onclick="updateStock(${book.id})">Update</button>
+          </div>
+        `;
+      });
+    }
+
+    async function updateStock(bookId) {
+      const newStock = document.getElementById(`stock-${bookId}`).value;
+
+      const bookResponse = await fetch(`http://localhost:8080/api/books/${bookId}`);
+      const book = await bookResponse.json();
+
+      book.stock = parseInt(newStock);
+
+      const response = await fetch(`http://localhost:8080/api/books/${bookId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(book)
+      });
+
+      document.getElementById("message").textContent = response.ok
+        ? "Stock updated."
+        : "Failed to update stock.";
+    }
+
+    async function loadUsers() {
+      const response = await fetch("http://localhost:8080/api/users");
+      const users = await response.json();
+
+      const container = document.getElementById("usersContainer");
+      container.innerHTML = "";
+      users.forEach(user => {
+        container.innerHTML += `
+          <p><strong>${user.username}</strong> (ID: ${user.id}) - ${user.email}</p>
+        `;
+      });
+    }
+
+    async function loadOrders() {
+      const userId = document.getElementById("orderUserId").value;
+      const response = await fetch(`http://localhost:8080/api/orders/user/${userId}`);
+      const orders = await response.json();
+
+      const container = document.getElementById("ordersContainer");
+      container.innerHTML = "";
+
+      if (orders.length === 0) {
+        container.innerHTML = "<p>No orders found for this user.</p>";
+        return;
+      }
+
+      orders.forEach(order => {
+        container.innerHTML += `
+          <div style="border:1px solid #aaa; margin:10px; padding:10px;">
+            <p><strong>Order ID:</strong> ${order.id}</p>
+            <p><strong>Total:</strong> €${order.total.toFixed(2)}</p>
+            <p><strong>Placed At:</strong> ${order.placedAt || "N/A"}</p>
+          </div>
+        `;
+      });
+    }
+
+    // Initial load
+    window.onload = () => {
+      loadBooks();
+      loadUsers();
+    };
+  </script>
+</body>
+</html>
