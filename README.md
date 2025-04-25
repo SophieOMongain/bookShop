@@ -42,5 +42,4 @@ This project is a full-stack Online Bookshop application developed for the Softw
 | MVC Pattern           | Separation of concerns for logic, data, and request handling| Controllers, Services, Repositories, Entities |
 | Repository Pattern    | Abstract data access using Spring JPA                       | All `*Repository.java` classes |
 
-## Project Structure
-BookShop/ ├── src/ │ └── main/ │ ├── java/ │ │ └── com/onlinebookshop/bookshop/ │ └── resources/ │ └── application.properties ├── frontend/ │ └── index.html ├── pom.xml ├── README.md
+
